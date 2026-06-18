@@ -29,6 +29,7 @@ function mount(container, viewCtx) {
     "padding:10px;gap:6px;font-size:12px;color:var(--fg);background:var(--bg);";
 
   const ta = document.createElement("textarea");
+  ta.dataset.node = "input"; // DOM 노출 — 메모 입력면(외부 주소 클릭/측정)
   ta.placeholder = "이 프로젝트의 메모…";
   ta.spellcheck = false;
   ta.disabled = true; // 로드 완료 전 입력 금지(저장 전 텍스트 유실 방지)
@@ -39,6 +40,7 @@ function mount(container, viewCtx) {
     "background:transparent;border:none;outline:none;";
 
   const status = document.createElement("div");
+  status.dataset.node = "status"; // DOM 노출 — 저장 상태줄(저장됨/저장 실패 측정)
   status.style.cssText = "min-height:14px;font-size:11px;color:var(--fg3);";
 
   wrap.append(ta, status);
