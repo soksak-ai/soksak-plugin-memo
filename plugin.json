@@ -1,10 +1,10 @@
 {
   "spec": "soksak-plugin-spec@1",
   "id": "soksak-plugin-memo",
-  "name": "메모",
+  "name": { "en": "Memo", "ko": "메모" },
   "version": "1.0.1",
   "repo": "https://github.com/soksak-ai/soksak-plugin-memo.git",
-  "description": "프로젝트별 메모 — 프로젝트 루트마다 분리 저장되는 간단한 메모장 패널",
+  "description": { "en": "Per-project memo — a simple notepad panel stored separately per project root.", "ko": "프로젝트별 메모 — 프로젝트 루트마다 분리 저장되는 간단한 메모장 패널" },
   "entry": "main.js",
   "permissions": [
     "ui",
@@ -14,7 +14,7 @@
     "views": [
       {
         "id": "panel",
-        "title": "메모",
+        "title": { "en": "Memo", "ko": "메모" },
         "icon": "✎",
         "placements": [
           "sidebar-right"
