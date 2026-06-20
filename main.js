@@ -4,6 +4,14 @@
 
 const DEBOUNCE_MS = 400;
 
+// ── i18n ─────────────────────────────────────────────────────────────────────
+const I18N = {
+  "memo.placeholder": { en: "Notes for this project…", ko: "이 프로젝트의 메모…" },
+  "status.saving":    { en: "Saving…",                 ko: "저장 중…" },
+  "status.saved":     { en: "Saved",                   ko: "저장됨" },
+};
+const t = (k) => { const s = I18N[k]; const l = app && app.locale ? app.locale() : "ko"; return s ? (s[l] ?? s.en ?? s.ko) : k; };
+
 // 루트 경로 → 저장 키(^[A-Za-z0-9._-]+$ 충족).
 // 비안전 문자는 "_" 치환 + djb2 해시 접미로 치환 충돌(/a/b vs /a_b)을 방지.
 function storageKey(root) {
@@ -30,7 +38,7 @@ function mount(container, viewCtx) {
 
   const ta = document.createElement("textarea");
   ta.dataset.node = "input"; // DOM 노출 — 메모 입력면(외부 주소 클릭/측정)
-  ta.placeholder = "이 프로젝트의 메모…";
+  ta.placeholder = t("memo.placeholder");
   ta.spellcheck = false;
   ta.disabled = true; // 로드 완료 전 입력 금지(저장 전 텍스트 유실 방지)
   // 터미널 본문과 같은 결: 테두리/인셋 카드 없이 배경(--bg)에 바로 녹아드는 입력면.
@@ -59,10 +67,10 @@ function mount(container, viewCtx) {
   const doSave = async () => {
     if (!app?.storage) return;
     dirty = false;
-    setStatus("저장 중…");
+    setStatus(t("status.saving"));
     try {
       await app.storage.write(key, ta.value);
-      if (!dirty) setStatus("저장됨"); // 쓰는 동안 또 입력했으면 유지
+      if (!dirty) setStatus(t("status.saved")); // 쓰는 동안 또 입력했으면 유지
     } catch (e) {
       dirty = true;
       setStatus(`저장 실패: ${e?.message ?? e}`, true);
@@ -71,7 +79,7 @@ function mount(container, viewCtx) {
 
   ta.addEventListener("input", () => {
     dirty = true;
-    setStatus("저장 중…");
+    setStatus(t("status.saving"));
     if (timer != null) clearTimeout(timer);
     timer = setTimeout(() => {
       timer = null;
@@ -87,7 +95,9 @@ function mount(container, viewCtx) {
     }
     if (dirty) await doSave();
   };
-  mounts.set(container, { flush });
+  // locale.changed 시 placeholder 갱신.
+  const reloc = () => { ta.placeholder = t("memo.placeholder"); };
+  mounts.set(container, { flush, reloc });
 
   // ── 초기 로드 ──────────────────────────────────────────────────────────────
   (async () => {
@@ -95,7 +105,7 @@ function mount(container, viewCtx) {
       const saved = await app?.storage?.read(key);
       if (typeof saved === "string") {
         ta.value = saved;
-        setStatus("저장됨");
+        setStatus(t("status.saved"));
       }
     } catch (e) {
       setStatus(`불러오기 실패: ${e?.message ?? e}`, true);
@@ -117,6 +127,9 @@ export default {
     app = ctx.app;
     // 뷰 등록 — 선언된 "panel" 에 바인딩. disposable 은 subscriptions 로 자동 수거.
     ctx.subscriptions.push(ctx.app.ui.registerView("panel", { mount, unmount }));
+    ctx.subscriptions.push(app.events.on("locale.changed", () => {
+      for (const m of mounts.values()) { try { m.reloc && m.reloc(); } catch {} }
+    }));
   },
 
   deactivate() {
